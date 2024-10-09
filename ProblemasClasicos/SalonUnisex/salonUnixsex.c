@@ -4,8 +4,8 @@
 #include <semaphore.h>
 #include <unistd.h>
 
-#define cantMujer 4
-#define cantHombre 4
+#define cantMujer 3
+#define cantHombre 2
 #define capSalon 3
 #define cortePelo 300000
 
@@ -74,6 +74,7 @@ void* mujer(){
 		pthread_mutex_unlock(&mutexMujeres);
 		//sumo un lugar en el salon
 		sem_post(&semMujeres);
+		sleep(7);
 	}
 }
 void* hombre(){
@@ -118,6 +119,7 @@ void* hombre(){
 		pthread_mutex_unlock(&mutexHombres);
 		//sumo un lugar en el salon
 		sem_post(&semHombres);
+		sleep(3);
 	}
 }
 

@@ -12,7 +12,6 @@ pthread_mutex_t abejas;
 int tarro=0;
 void* abeja(){
     while(1){
-        // sem_wait(&semAbeja);
         //seccion de entrada
         pthread_mutex_lock(&abejas);
         sem_wait(&vacio);
@@ -30,6 +29,7 @@ void* abeja(){
         if(sem_trywait(&vacio) == -1){
             //esta completamente lleno -> despierto al oso
             sem_post(&semOso);
+            printf("Abeja despierta oso\n");
             sem_wait(&semTermino);
         }else{
             //dejo intacto el semaforo y pueden seguir produciendo 
@@ -44,33 +44,19 @@ void* oso(){
     while(1){
         
         sem_wait(&semOso);
-        pthread_mutex_lock(&abejas);
         printf("Oso despierto\n");
-        sem_wait(&lleno);
         //Preguntar por un mutex si necesito un mutex para cada entidad (oso y abejas) o uno compartido
         
-        tarro--;
         // usleep(100000);
-        printf("El oso: come, tarro miel: %i\n", tarro);
-
-        // pthread_mutex_unlock(&abejas);
-        //notifico que se consumio 1
-        sem_post(&vacio);
-
-        //tengo que ver si esta vacio -> el oso se duerme
-        if(sem_trywait(&lleno) == -1){
-            //esta completamente vacio ->  aviso a las abejas
-            for(int i=0;i<cantAbejas;i++){
-                sem_post(&semAbeja);
-            }
-            // pthread_mutex_unlock(&abejas);
-        }else{
-            //dejo intacto el semaforo y el oso puede seguir comiendo
-            sem_post(&semOso);
-            sem_post(&lleno);
+        for (int i = 0; i < tarroSize; i++){
+            tarro--;
+            sem_post(&vacio);
+            sem_wait(&lleno);
+            printf("El oso: come, tarro miel: %i\n", tarro);
         }
-
         
+        printf("Oso: Oso se durmio\n");
+        sem_post(&semTermino);
     }
 }
 
@@ -81,7 +67,6 @@ int main() {
     sem_init(&vacio,0,tarroSize);
     sem_init(&lleno,0,0);
     sem_init(&semOso,0,0);
-    sem_init(&semAbeja,0,cantAbejas);
     sem_init(&semTermino,0,0);
     pthread_mutex_init(&abejas, NULL);
 
@@ -98,6 +83,8 @@ int main() {
 
     sem_destroy(&vacio);
     sem_destroy(&lleno);
+    sem_destroy(&semOso);
+    sem_destroy(&semTermino);
     pthread_mutex_destroy(&abejas);
 
 }
